@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Employees - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row page-header animate-fade-in-up">
+    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="page-title text-glow-primary">Employee Records Directory</h1>
+            <p class="page-subtitle">Inspect active corporate nodes, filter profiles, and initiate ML attrition diagnostics.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('employee_add') }}" class="btn btn-primary-custom">
+                <i class="fa-solid fa-user-plus me-2"></i>Add Employee
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filters Panel -->
+<div class="row mb-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <form action="{{ url_for('employees_list') }}" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="search" class="form-label form-label-custom">Search Profile</label>
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" class="form-control form-control-custom search-input" id="search" name="search" 
+                               placeholder="Search by ID or Name..." value="{{ search }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="department" class="form-label form-label-custom">Department</label>
+                    <select class="form-control form-control-custom" id="department" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="role" class="form-label form-label-custom">Job Role</label>
+                    <select class="form-control form-control-custom" id="role" name="role">
+                        <option value="">All Roles</option>
+                        {% for role in roles %}
+                            <option value="{{ role }}" {% if selected_role == role %}selected{% endif %}>{{ role }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2">
+                        <i class="fa-solid fa-filter me-2"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Employee List Directory Table -->
+<div class="row animate-fade-in-up" style="animation-delay: 0.15s;">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Demographics</th>
+                            <th>Department & Job Role</th>
+                            <th>Compensation</th>
+                            <th>Overtime</th>
+                            <th>Latest Risk Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if employees_rich %}
+                            {% for rich in employees_rich %}
+                                {% set emp = rich.employee %}
+                                {% set pred = rich.latest_prediction %}
+                                <tr>
+                                    <td><strong>{{ emp.employee_id }}</strong></td>
+                                    <td>{{ emp.name }}</td>
+                                    <td>{{ emp.gender }}, Age {{ emp.age }}</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ emp.job_role }}</div>
+                                        <div class="text-muted" style="font-size: 0.8rem;">{{ emp.department }}</div>
+                                    </td>
+                                    <td>
+                                        <div>₹{{ "{:,.0f}".format(emp.monthly_income) }}/mo</div>
+                                        <div class="text-muted" style="font-size: 0.8rem;">₹{{ "{:,.0f}".format(emp.salary) }}/yr</div>
+                                    </td>
+                                    <td>
+                                        {% if emp.overtime == 'Yes' %}
+                                            <span class="text-warning"><i class="fa-solid fa-hourglass-half me-1"></i>Yes</span>
+                                        {% else %}
+                                            <span class="text-muted"><i class="fa-solid fa-ban me-1"></i>No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if pred %}
+                                            {% if pred.risk_level == 'High' %}
+                                                <a href="{{ url_for('prediction_result', prediction_id=pred.prediction_id) }}" class="badge-custom badge-risk-high text-decoration-none">
+                                                    High ({{ pred.probability }}%)
+                                                </a>
+                                            {% elif pred.risk_level == 'Medium' %}
+                                                <a href="{{ url_for('prediction_result', prediction_id=pred.prediction_id) }}" class="badge-custom badge-risk-medium text-decoration-none">
+                                                    Medium ({{ pred.probability }}%)
+                                                </a>
+                                            {% else %}
+                                                <a href="{{ url_for('prediction_result', prediction_id=pred.prediction_id) }}" class="badge-custom badge-risk-low text-decoration-none">
+                                                    Low ({{ pred.probability }}%)
+                                                </a>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge-custom text-muted border border-secondary bg-dark" style="font-size: 0.75rem;">
+                                                <i class="fa-solid fa-solid fa-circle-question me-1"></i>Not Tested
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2 align-items-center">
+                                            <a href="{{ url_for('predict_attrition_trigger', employee_id=emp.employee_id) }}" class="btn btn-sm btn-primary-custom py-1.5 px-2.5" title="Predict Attrition">
+                                                <i class="fa-solid fa-bolt me-1"></i>Predict
+                                            </a>
+                                            <a href="{{ url_for('employee_edit', employee_id=emp.employee_id) }}" class="btn btn-sm btn-secondary-custom py-1.5 px-2" title="Edit Profile">
+                                                <i class="fa-solid fa-user-pen"></i>
+                                            </a>
+                                            <form action="{{ url_for('employee_delete', employee_id=emp.employee_id) }}" method="POST" onsubmit="return confirm('WARNING: Deleting this employee will permanently erase all associated prediction logs! Proceed?');" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1.5 px-2" style="border-radius: 8px;" title="Delete Profile">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-folder-open mb-3" style="font-size: 2rem;"></i>
+                                    <p class="mb-0">No employee records match the filter criteria. Clear filters or add new profiles.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

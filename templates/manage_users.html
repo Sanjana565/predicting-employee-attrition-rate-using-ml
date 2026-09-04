@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row page-header animate-fade-in-up">
+    <div class="col-12">
+        <h1 class="page-title text-glow-primary">HR User Accounts Management</h1>
+        <p class="page-subtitle">Add, verify, and modify corporate access permissions for Human Resource managers.</p>
+    </div>
+</div>
+
+<div class="row g-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <!-- Left Column: Add User Form -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-user-plus text-primary me-2"></i>Create New User</h5>
+            
+            <form action="{{ url_for('manage_users') }}" method="POST">
+                <div class="mb-3">
+                    <label for="name" class="form-label form-label-custom">Full Name</label>
+                    <input type="text" class="form-control form-control-custom" id="name" name="name" required placeholder="Jane Doe">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label form-label-custom">Email Address</label>
+                    <input type="email" class="form-control form-control-custom" id="email" name="email" required placeholder="jane@company.com">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label form-label-custom">Password</label>
+                    <input type="password" class="form-control form-control-custom" id="password" name="password" required placeholder="••••••••">
+                </div>
+                <div class="mb-4">
+                    <label for="role" class="form-label form-label-custom">Access Role</label>
+                    <select class="form-control form-control-custom" id="role" name="role" required>
+                        <option value="HR">HR Manager</option>
+                        <option value="Admin">System Admin</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary-custom w-100 py-2">
+                    <i class="fa-solid fa-user-check me-2"></i>Register Account
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Right Column: User Accounts Table -->
+    <div class="col-lg-8">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-users text-secondary me-2"></i>Registered User Profiles</h5>
+            
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Access Role</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for user in users %}
+                                <tr>
+                                    <td><strong>#{{ user.id }}</strong></td>
+                                    <td>{{ user.name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.role == 'Admin' %}
+                                            <span class="badge-custom bg-light text-dark fw-bold" style="font-size: 0.7rem; border: 1px solid #fff;">ADMIN</span>
+                                        {% else %}
+                                            <span class="badge-custom bg-dark text-primary border border-primary fw-semibold" style="font-size: 0.7rem;">HR MANAGER</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if user.id == current_user.id %}
+                                            <span class="text-muted italic" style="font-size: 0.8rem;">Current Account</span>
+                                        {% else %}
+                                            <form action="{{ url_for('user_delete', user_id=user.id) }}" method="POST" onsubmit="return confirm('WARNING: Permanently revoke user access and delete account profile?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1.5 px-3" style="border-radius: 8px;">
+                                                    <i class="fa-solid fa-user-slash me-1"></i>Delete
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-users-slash mb-3" style="font-size: 2rem;"></i>
+                                    <p class="mb-0">No registered profiles in DB (unexpected error).</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if employee %}Edit Employee - {{ employee.name }}{% else %}Add New Employee{% endif %} - RETAIN.AI
+{% endblock %}
+
+{% block content %}
+<div class="row page-header animate-fade-in-up">
+    <div class="col-12">
+        <a href="{{ url_for('employees_list') }}" class="btn btn-sm btn-secondary-custom mb-3">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Employee List
+        </a>
+        <h1 class="page-title text-glow-primary">
+            {% if employee %}Edit Employee Details{% else %}Add New Employee Profile{% endif %}
+        </h1>
+        <p class="page-subtitle">
+            {% if employee %}Update information for {{ employee.name }} (ID: {{ employee.employee_id }}).{% else %}Register a new employee into the system database.{% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <div class="col-lg-10">
+        <div class="glass-card p-5">
+            <form action="{% if employee %}{{ url_for('employee_edit', employee_id=employee.employee_id) }}{% else %}{{ url_for('employee_add') }}{% endif %}" method="POST">
+                
+                <!-- Section 1: Demographics -->
+                <h5 class="fw-bold text-primary mb-4"><i class="fa-solid fa-user me-2"></i>Demographics</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="employee_id" class="form-label form-label-custom">Employee ID *</label>
+                        <input type="text" class="form-control form-control-custom" id="employee_id" name="employee_id" required 
+                               placeholder="e.g. EMP1001" {% if employee %}value="{{ employee.employee_id }}" readonly disabled{% endif %}>
+                        {% if employee %}
+                            <input type="hidden" name="employee_id" value="{{ employee.employee_id }}">
+                        {% endif %}
+                    </div>
+                    <div class="col-md-5">
+                        <label for="name" class="form-label form-label-custom">Full Name *</label>
+                        <input type="text" class="form-control form-control-custom" id="name" name="name" required 
+                               placeholder="Rahul Sen" value="{{ employee.name if employee else '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="age" class="form-label form-label-custom">Age *</label>
+                        <input type="number" class="form-control form-control-custom" id="age" name="age" required min="18" max="65" 
+                               placeholder="30" value="{{ employee.age if employee else '30' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="gender" class="form-label form-label-custom">Gender *</label>
+                        <select class="form-control form-control-custom" id="gender" name="gender" required>
+                            <option value="Male" {% if employee and employee.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if employee and employee.gender == 'Female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="marital_status" class="form-label form-label-custom">Marital Status *</label>
+                        <select class="form-control form-control-custom" id="marital_status" name="marital_status" required>
+                            <option value="Single" {% if employee and employee.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                            <option value="Married" {% if employee and employee.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                            <option value="Divorced" {% if employee and employee.marital_status == 'Divorced' %}selected{% endif %}>Divorced</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="education" class="form-label form-label-custom">Education Level *</label>
+                        <select class="form-control form-control-custom" id="education" name="education" required>
+                            <option value="High School" {% if employee and employee.education == 'High School' %}selected{% endif %}>High School</option>
+                            <option value="Associate Degree" {% if employee and employee.education == 'Associate Degree' %}selected{% endif %}>Associate Degree</option>
+                            <option value="Bachelor's Degree" {% if not employee or employee.education == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree</option>
+                            <option value="Master's Degree" {% if employee and employee.education == "Master's Degree" %}selected{% endif %}>Master's Degree</option>
+                            <option value="PhD" {% if employee and employee.education == 'PhD' %}selected{% endif %}>PhD</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <!-- Section 2: Work Role & Income -->
+                <h5 class="fw-bold text-primary mb-4"><i class="fa-solid fa-briefcase me-2"></i>Job Profile & Compensation</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="department" class="form-label form-label-custom">Department *</label>
+                        <select class="form-control form-control-custom" id="department" name="department" required onchange="updateJobRoles()">
+                            <option value="IT" {% if employee and employee.department == 'IT' %}selected{% endif %}>IT</option>
+                            <option value="Sales" {% if employee and employee.department == 'Sales' %}selected{% endif %}>Sales</option>
+                            <option value="Human Resources" {% if employee and employee.department == 'Human Resources' %}selected{% endif %}>Human Resources</option>
+                            <option value="Finance" {% if employee and employee.department == 'Finance' %}selected{% endif %}>Finance</option>
+                            <option value="Research & Development" {% if employee and employee.department == 'Research & Development' %}selected{% endif %}>Research & Development</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="job_role" class="form-label form-label-custom">Job Role *</label>
+                        <select class="form-control form-control-custom" id="job_role" name="job_role" required>
+                            <!-- Options dynamically populated or defaulted -->
+                            <option value="Developer" {% if employee and employee.job_role == 'Developer' %}selected{% endif %}>Developer</option>
+                            <option value="Systems Analyst" {% if employee and employee.job_role == 'Systems Analyst' %}selected{% endif %}>Systems Analyst</option>
+                            <option value="Sales Executive" {% if employee and employee.job_role == 'Sales Executive' %}selected{% endif %}>Sales Executive</option>
+                            <option value="Sales Representative" {% if employee and employee.job_role == 'Sales Representative' %}selected{% endif %}>Sales Representative</option>
+                            <option value="HR Specialist" {% if employee and employee.job_role == 'HR Specialist' %}selected{% endif %}>HR Specialist</option>
+                            <option value="HR Manager" {% if employee and employee.job_role == 'HR Manager' %}selected{% endif %}>HR Manager</option>
+                            <option value="Financial Analyst" {% if employee and employee.job_role == 'Financial Analyst' %}selected{% endif %}>Financial Analyst</option>
+                            <option value="Accountant" {% if employee and employee.job_role == 'Accountant' %}selected{% endif %}>Accountant</option>
+                            <option value="Research Scientist" {% if employee and employee.job_role == 'Research Scientist' %}selected{% endif %}>Research Scientist</option>
+                            <option value="Laboratory Technician" {% if employee and employee.job_role == 'Laboratory Technician' %}selected{% endif %}>Laboratory Technician</option>
+                            <option value="Manager" {% if employee and employee.job_role == 'Manager' %}selected{% endif %}>Manager</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="years_at_company" class="form-label form-label-custom">Years at Company *</label>
+                        <input type="number" class="form-control form-control-custom" id="years_at_company" name="years_at_company" required min="0" max="40" 
+                               placeholder="3" value="{{ employee.years_at_company if employee else '3' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="monthly_income" class="form-label form-label-custom">Monthly Income (₹) *</label>
+                        <input type="number" class="form-control form-control-custom" id="monthly_income" name="monthly_income" required min="1000" max="30000" step="100" 
+                               placeholder="5000" value="{{ employee.monthly_income if employee else '5000' }}" oninput="syncAnnualSalary()">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="salary" class="form-label form-label-custom">Annual Salary (₹) *</label>
+                        <input type="number" class="form-control form-control-custom" id="salary" name="salary" required min="12000" max="360000" step="1000" 
+                               placeholder="60000" value="{{ employee.salary if employee else '60000' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="distance_from_home" class="form-label form-label-custom">Distance from Home (km) *</label>
+                        <input type="number" class="form-control form-control-custom" id="distance_from_home" name="distance_from_home" required min="1" max="100" step="0.5" 
+                               placeholder="8.5" value="{{ employee.distance_from_home if employee else '8.5' }}">
+                    </div>
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <!-- Section 3: Engagement & Performance -->
+                <h5 class="fw-bold text-primary mb-4"><i class="fa-solid fa-gauge-high me-2"></i>Performance & Job Sentiment</h5>
+                <div class="row g-3 mb-5">
+                    <div class="col-md-4">
+                        <label for="job_satisfaction" class="form-label form-label-custom">Job Satisfaction (1-4) *</label>
+                        <select class="form-control form-control-custom" id="job_satisfaction" name="job_satisfaction" required>
+                            <option value="1" {% if employee and employee.job_satisfaction == 1 %}selected{% endif %}>1 - Low</option>
+                            <option value="2" {% if employee and employee.job_satisfaction == 2 %}selected{% endif %}>2 - Medium</option>
+                            <option value="3" {% if not employee or employee.job_satisfaction == 3 %}selected{% endif %}>3 - High</option>
+                            <option value="4" {% if employee and employee.job_satisfaction == 4 %}selected{% endif %}>4 - Very High</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="work_life_balance" class="form-label form-label-custom">Work-Life Balance (1-4) *</label>
+                        <select class="form-control form-control-custom" id="work_life_balance" name="work_life_balance" required>
+                            <option value="1" {% if employee and employee.work_life_balance == 1 %}selected{% endif %}>1 - Bad</option>
+                            <option value="2" {% if employee and employee.work_life_balance == 2 %}selected{% endif %}>2 - Average</option>
+                            <option value="3" {% if not employee or employee.work_life_balance == 3 %}selected{% endif %}>3 - Good</option>
+                            <option value="4" {% if employee and employee.work_life_balance == 4 %}selected{% endif %}>4 - Excellent</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="performance_rating" class="form-label form-label-custom">Performance Rating (1-4) *</label>
+                        <select class="form-control form-control-custom" id="performance_rating" name="performance_rating" required>
+                            <option value="1" {% if employee and employee.performance_rating == 1 %}selected{% endif %}>1 - Low</option>
+                            <option value="2" {% if employee and employee.performance_rating == 2 %}selected{% endif %}>2 - Medium</option>
+                            <option value="3" {% if not employee or employee.performance_rating == 3 %}selected{% endif %}>3 - High</option>
+                            <option value="4" {% if employee and employee.performance_rating == 4 %}selected{% endif %}>4 - Outstanding</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="overtime" class="form-label form-label-custom">Overtime Hours *</label>
+                        <select class="form-control form-control-custom" id="overtime" name="overtime" required>
+                            <option value="No" {% if not employee or employee.overtime == 'No' %}selected{% endif %}>No</option>
+                            <option value="Yes" {% if employee and employee.overtime == 'Yes' %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Submission Controls -->
+                <div class="d-flex flex-wrap justify-content-end gap-3">
+                    <button type="submit" class="btn btn-secondary-custom px-4 py-2.5">
+                        <i class="fa-solid fa-save me-2"></i>Save Details Only
+                    </button>
+                    <button type="submit" name="predict_immediately" value="true" class="btn btn-primary-custom px-4 py-2.5">
+                        <i class="fa-solid fa-bolt me-2"></i>Save & Predict Attrition
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Autofills annual salary = monthly_income * 12 for convenience
+    function syncAnnualSalary() {
+        const monthly = document.getElementById('monthly_income').value;
+        if(monthly) {
+            document.getElementById('salary').value = Math.round(monthly * 12);
+        }
+    }
+
+    // Dynamic dropdown values for job roles relative to department
+    const deptRoles = {
+        'IT': ['Developer', 'Systems Analyst', 'Manager'],
+        'Sales': ['Sales Executive', 'Sales Representative', 'Manager'],
+        'Human Resources': ['HR Specialist', 'HR Manager', 'Manager'],
+        'Finance': ['Financial Analyst', 'Accountant', 'Manager'],
+        'Research & Development': ['Research Scientist', 'Laboratory Technician', 'Manager']
+    };
+
+    function updateJobRoles() {
+        const dept = document.getElementById('department').value;
+        const roleDropdown = document.getElementById('job_role');
+        
+        // Clear previous options
+        roleDropdown.innerHTML = '';
+        
+        const roles = deptRoles[dept] || [];
+        roles.forEach(role => {
+            const opt = document.createElement('option');
+            opt.value = role;
+            opt.textContent = role;
+            roleDropdown.appendChild(opt);
+        });
+    }
+</script>
+{% endblock %}

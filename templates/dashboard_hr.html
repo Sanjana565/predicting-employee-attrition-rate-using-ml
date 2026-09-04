@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}HR Dashboard - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row page-header animate-fade-in-up">
+    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="page-title text-glow-primary">HR Analytics Dashboard</h1>
+            <p class="page-subtitle">Welcome back, {{ current_user.name }}. Monitor workforce stability metrics and risk alerts.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('employee_add') }}" class="btn btn-primary-custom">
+                <i class="fa-solid fa-user-plus me-2"></i>Add Employee
+            </a>
+            <a href="{{ url_for('employees_list') }}" class="btn btn-secondary-custom">
+                <i class="fa-solid fa-search me-2"></i>Trigger Prediction
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Metrics Cards -->
+<div class="row g-4 mb-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <div class="col-6 col-lg-3">
+        <div class="glass-card metric-card h-100">
+            <div class="metric-icon bg-primary text-light">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="metric-value">{{ total_employees }}</div>
+            <div class="metric-label">Total Employees</div>
+        </div>
+    </div>
+    
+    <div class="col-6 col-lg-3">
+        <div class="glass-card metric-card h-100 border-danger" style="border-left: 4px solid var(--danger) !important;">
+            <div class="metric-icon bg-danger-glow text-danger">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="metric-value text-danger text-glow-danger">{{ high_risk }}</div>
+            <div class="metric-label text-danger">High Risk (71-100%)</div>
+        </div>
+    </div>
+    
+    <div class="col-6 col-lg-3">
+        <div class="glass-card metric-card h-100 border-warning" style="border-left: 4px solid var(--warning) !important;">
+            <div class="metric-icon bg-warning-glow text-warning">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <div class="metric-value text-warning text-glow-warning">{{ medium_risk }}</div>
+            <div class="metric-label text-warning">Medium Risk (31-70%)</div>
+        </div>
+    </div>
+    
+    <div class="col-6 col-lg-3">
+        <div class="glass-card metric-card h-100 border-success" style="border-left: 4px solid var(--success) !important;">
+            <div class="metric-icon bg-success-glow text-success">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="metric-value text-success text-glow-success">{{ low_risk }}</div>
+            <div class="metric-label text-success">Low Risk (0-30%)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="row g-4 mb-4 animate-fade-in-up" style="animation-delay: 0.2s;">
+    <!-- Doughnut Attrition Class Distribution -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold mb-4">Attrition Breakdown</h5>
+            <div style="position: relative; height: 260px;">
+                <canvas id="attritionPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bar Attrition By Department -->
+    <div class="col-lg-8">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold mb-4">Attrition by Department</h5>
+            <div style="position: relative; height: 260px;">
+                <canvas id="attritionBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Line Attrition Trend -->
+<div class="row g-4 mb-4 animate-fade-in-up" style="animation-delay: 0.25s;">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold mb-4">Monthly Attrition Trend</h5>
+            <div style="position: relative; height: 280px;">
+                <canvas id="attritionLineChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Predictions Table -->
+<div class="row animate-fade-in-up" style="animation-delay: 0.3s;">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h5 class="fw-bold mb-0">Recent Attrition Inferences</h5>
+                <a href="{{ url_for('prediction_history') }}" class="text-primary text-decoration-none fw-semibold">
+                    View History Logs <i class="fa-solid fa-circle-arrow-right ms-1"></i>
+                </a>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Employee Name</th>
+                            <th>Prediction</th>
+                            <th>Leave Probability</th>
+                            <th>Risk Level</th>
+                            <th>Prediction Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_predictions %}
+                            {% for pred in recent_predictions %}
+                                <tr>
+                                    <td><strong>{{ pred.employee_id }}</strong></td>
+                                    <td>{{ pred.employee.name if pred.employee else 'Deleted Employee' }}</td>
+                                    <td>
+                                        {% if pred.prediction == 'Likely to Leave' %}
+                                            <span class="text-danger fw-semibold"><i class="fa-solid fa-person-walking-arrow-right me-1"></i>Likely to Leave</span>
+                                        {% else %}
+                                            <span class="text-success fw-semibold"><i class="fa-solid fa-person-circle-check me-1"></i>Likely to Stay</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span>{{ pred.probability }}%</span>
+                                            <div class="progress flex-grow-1" style="height: 6px; min-width: 60px; background: rgba(255,255,255,0.05);">
+                                                {% set p_color = 'bg-success' %}
+                                                {% if pred.risk_level == 'High' %}
+                                                    {% set p_color = 'bg-danger' %}
+                                                {% elif pred.risk_level == 'Medium' %}
+                                                    {% set p_color = 'bg-warning' %}
+                                                {% endif %}
+                                                <div class="progress-bar {{ p_color }}" role="progressbar" style="width: {{ pred.probability }}%" aria-valuenow="{{ pred.probability }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if pred.risk_level == 'High' %}
+                                            <span class="badge-custom badge-risk-high">High</span>
+                                        {% elif pred.risk_level == 'Medium' %}
+                                            <span class="badge-custom badge-risk-medium">Medium</span>
+                                        {% else %}
+                                            <span class="badge-custom badge-risk-low">Low</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted" style="font-size: 0.85rem;">{{ pred.prediction_date.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ url_for('prediction_result', prediction_id=pred.prediction_id) }}" class="btn btn-sm btn-secondary-custom py-1.5 px-3">
+                                                <i class="fa-solid fa-eye me-1"></i>View
+                                            </a>
+                                            <form action="{{ url_for('prediction_delete', prediction_id=pred.prediction_id) }}" method="POST" onsubmit="return confirm('Delete this prediction record?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1.5 px-2" style="border-radius: 8px;">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-magnifying-glass mb-3" style="font-size: 2rem;"></i>
+                                    <p class="mb-0">No predictions recorded yet. Add employees and click "Predict Attrition" to begin.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Connect dashboard analytics scripts -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

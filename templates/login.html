@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-5 animate-fade-in-up">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <i class="fa-solid fa-brain-circuit text-primary mb-3 text-glow-primary" style="font-size: 2.5rem;"></i>
+                <h2 class="fw-bold">Sign In</h2>
+                <p class="text-secondary">Access predictive attrition dashboards</p>
+            </div>
+            
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="mb-3">
+                    <label for="email" class="form-label form-label-custom">Email Address</label>
+                    <input type="email" class="form-control form-control-custom" id="email" name="email" required placeholder="name@company.com">
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label form-label-custom">Password</label>
+                    <input type="password" class="form-control form-control-custom" id="password" name="password" required placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="btn btn-primary-custom w-100 py-2.5 mb-3">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In
+                </button>
+            </form>
+            
+            <div class="text-center mt-3">
+                <span class="text-muted">New HR Manager?</span>
+                <a href="{{ url_for('register') }}" class="text-primary text-decoration-none ms-1">Create an account</a>
+            </div>
+            
+            <div class="mt-4 p-3 glass-panel rounded">
+                <h6 class="fw-bold text-muted mb-1 text-center" style="font-size: 0.8rem;">Demo Accounts</h6>
+                <div class="text-secondary d-flex justify-content-between mb-1" style="font-size: 0.75rem;">
+                    <span><strong>HR:</strong> hr@attrition.com</span>
+                    <span>password: <strong>hr12345</strong></span>
+                </div>
+                <div class="text-secondary d-flex justify-content-between" style="font-size: 0.75rem;">
+                    <span><strong>Admin:</strong> admin@attrition.com</span>
+                    <span>password: <strong>admin123</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

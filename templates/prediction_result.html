@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Attrition Diagnosis - {{ employee.name }} - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row page-header animate-fade-in-up">
+    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <a href="{{ url_for('employees_list') }}" class="btn btn-sm btn-secondary-custom mb-3">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back to Directory
+            </a>
+            <h1 class="page-title text-glow-primary">Attrition Risk Analysis</h1>
+            <p class="page-subtitle">Diagnostic prediction report generated via Random Forest Classification.</p>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn btn-secondary-custom py-2 px-4">
+                <i class="fa-solid fa-print me-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <!-- Left Column: Prediction Results -->
+    <div class="col-lg-5">
+        <div class="glass-card p-5 h-100 text-center d-flex flex-column justify-content-center">
+            <h5 class="text-secondary fw-semibold mb-4">Inference Output</h5>
+            
+            <!-- Risk Level Classification -->
+            <div class="mb-4">
+                {% if prediction.risk_level == 'High' %}
+                    <span class="badge-custom badge-risk-high px-4 py-2" style="font-size: 1rem;">High Risk</span>
+                    <h2 class="mt-4 fw-extrabold text-danger text-glow-danger">{{ prediction.prediction }}</h2>
+                {% elif prediction.risk_level == 'Medium' %}
+                    <span class="badge-custom badge-risk-medium px-4 py-2" style="font-size: 1rem;">Medium Risk</span>
+                    <h2 class="mt-4 fw-extrabold text-warning text-glow-warning">{{ prediction.prediction }}</h2>
+                {% else %}
+                    <span class="badge-custom badge-risk-low px-4 py-2" style="font-size: 1rem;">Low Risk</span>
+                    <h2 class="mt-4 fw-extrabold text-success text-glow-success">{{ prediction.prediction }}</h2>
+                {% endif %}
+            </div>
+            
+            <!-- Confidence Meter (Chart.js or customized CSS circular progress) -->
+            <div class="my-4 d-flex justify-content-center">
+                <div class="gauge-container d-flex flex-column align-items-center justify-content-center" style="position: relative;">
+                    <canvas id="predictionGauge" width="180" height="180"></canvas>
+                    <div style="position: absolute; top: 48%; transform: translateY(-50%);">
+                        <div class="h2 fw-bold mb-0 text-white">{{ prediction.probability }}%</div>
+                        <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Leave Prob</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Proportions display -->
+            <div class="row g-2 mt-2 px-3">
+                <div class="col-6 border-end border-secondary">
+                    <h6 class="text-muted mb-1" style="font-size: 0.8rem;">Leave Probability</h6>
+                    <div class="fw-bold text-danger">{{ prediction.probability }}%</div>
+                </div>
+                <div class="col-6">
+                    <h6 class="text-muted mb-1" style="font-size: 0.8rem;">Stay Probability</h6>
+                    <div class="fw-bold text-success">{{ (100.0 - prediction.probability)|round(1) }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Employee Profile Summary & Recommendations -->
+    <div class="col-lg-7">
+        <div class="glass-card p-5 h-100 d-flex flex-column">
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-id-card me-2 text-primary"></i>Employee Profile Summary</h5>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <span class="text-muted d-block" style="font-size: 0.8rem;">Name / ID</span>
+                    <span class="fw-bold text-white">{{ employee.name }} ({{ employee.employee_id }})</span>
+                </div>
+                <div class="col-md-6">
+                    <span class="text-muted d-block" style="font-size: 0.8rem;">Department / Job Role</span>
+                    <span class="fw-bold text-white">{{ employee.job_role }} - {{ employee.department }}</span>
+                </div>
+                <div class="col-md-6">
+                    <span class="text-muted d-block" style="font-size: 0.8rem;">Monthly / Annual Salary</span>
+                    <span class="fw-bold text-white">₹{{ "{:,.0f}".format(employee.monthly_income) }}/mo (₹{{ "{:,.0f}".format(employee.salary) }}/yr)</span>
+                </div>
+                <div class="col-md-6">
+                    <span class="text-muted d-block" style="font-size: 0.8rem;">Workplace Experience</span>
+                    <span class="fw-bold text-white">{{ employee.years_at_company }} Years at Company</span>
+                </div>
+            </div>
+            
+            <hr class="border-secondary my-4">
+            
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-list-check me-2 text-success"></i>Retention Action Recommendations</h5>
+            <div class="flex-grow-1">
+                {% if recommendations %}
+                    <ul class="list-unstyled mb-0">
+                        {% for rec in recommendations %}
+                            <li class="recommendation-item">
+                                <span class="recommendation-bullet text-primary"><i class="fa-solid fa-circle-check"></i></span>
+                                <span class="text-secondary" style="font-size: 0.95rem;">{{ rec }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted italic">No specific risk triggers. Maintain standard annual engagement loops.</p>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4 p-3 glass-panel rounded">
+                <div class="row text-center text-muted" style="font-size: 0.8rem;">
+                    <div class="col-4 border-end border-secondary">
+                        <div class="mb-1"><i class="fa-solid fa-heart text-danger me-1"></i>Job Sat</div>
+                        <div class="d-flex justify-content-center mt-1">
+                            <div class="progress w-75" style="height: 6px; background: rgba(255,255,255,0.05);">
+                                <div class="progress-bar bg-danger" style="width: {{ (employee.job_satisfaction / 4 * 100)|round }}%"></div>
+                            </div>
+                        </div>
+                        <small class="text-secondary d-block mt-1" style="font-size: 0.75rem;">{{ employee.job_satisfaction }} / 4</small>
+                    </div>
+                    <div class="col-4 border-end border-secondary">
+                        <div class="mb-1"><i class="fa-solid fa-scale-balanced text-warning me-1"></i>Balance</div>
+                        <div class="d-flex justify-content-center mt-1">
+                            <div class="progress w-75" style="height: 6px; background: rgba(255,255,255,0.05);">
+                                <div class="progress-bar bg-warning" style="width: {{ (employee.work_life_balance / 4 * 100)|round }}%"></div>
+                            </div>
+                        </div>
+                        <small class="text-secondary d-block mt-1" style="font-size: 0.75rem;">{{ employee.work_life_balance }} / 4</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-1"><i class="fa-solid fa-car text-info me-1"></i>Commute</div>
+                        <div class="d-flex justify-content-center mt-1">
+                            <div class="progress w-75" style="height: 6px; background: rgba(255,255,255,0.05);">
+                                <div class="progress-bar bg-info" style="width: {{ (employee.distance_from_home / 30 * 100)|round if employee.distance_from_home < 30 else 100 }}%"></div>
+                            </div>
+                        </div>
+                        <small class="text-secondary d-block mt-1" style="font-size: 0.75rem;">{{ employee.distance_from_home }} km</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Draw the gauge using Chart.js doughnut chart config
+    const ctx = document.getElementById('predictionGauge').getContext('2d');
+    
+    // Select color based on risk level
+    const riskLevel = "{{ prediction.risk_level }}";
+    let activeColor = '#10b981'; // Low: Green
+    let glowColor = 'rgba(16, 185, 129, 0.15)';
+    if(riskLevel === 'High') {
+        activeColor = '#ef4444'; // High: Red
+        glowColor = 'rgba(239, 68, 68, 0.15)';
+    } else if(riskLevel === 'Medium') {
+        activeColor = '#f59e0b'; // Medium: Amber
+        glowColor = 'rgba(245, 158, 11, 0.15)';
+    }
+
+    const leaveProb = parseFloat("{{ prediction.probability }}");
+    const remainProb = 100.0 - leaveProb;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Leave Prob', 'Remain Prob'],
+            datasets: [{
+                data: [leaveProb, remainProb],
+                backgroundColor: [activeColor, 'rgba(255, 255, 255, 0.05)'],
+                borderWidth: 0,
+                hoverBackgroundColor: [activeColor, 'rgba(255, 255, 255, 0.05)']
+            }]
+        },
+        options: {
+            responsive: false,
+            cutout: '80%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            rotation: -90,
+            circumference: 360
+        }
+    });
+</script>
+{% endblock %}

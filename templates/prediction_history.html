@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Inference Logs - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row page-header animate-fade-in-up">
+    <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="page-title text-glow-primary">Inference History Logs</h1>
+            <p class="page-subtitle">Inspect historical predictive records and retrieve comprehensive risk logs.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filters Panel -->
+<div class="row mb-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <form action="{{ url_for('prediction_history') }}" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="search" class="form-label form-label-custom">Search Profile</label>
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" class="form-control form-control-custom search-input" id="search" name="search" 
+                               placeholder="Search by ID or Name..." value="{{ search }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label for="risk_level" class="form-label form-label-custom">Risk Categorization</label>
+                    <select class="form-control form-control-custom" id="risk_level" name="risk_level">
+                        <option value="">All Risk Levels</option>
+                        <option value="High" {% if selected_risk == 'High' %}selected{% endif %}>High Risk</option>
+                        <option value="Medium" {% if selected_risk == 'Medium' %}selected{% endif %}>Medium Risk</option>
+                        <option value="Low" {% if selected_risk == 'Low' %}selected{% endif %}>Low Risk</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2">
+                        <i class="fa-solid fa-filter me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- History log table -->
+<div class="row animate-fade-in-up" style="animation-delay: 0.15s;">
+    <div class="col-12">
+        <div class="glass-card p-4">
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Employee Name</th>
+                            <th>Prediction</th>
+                            <th>Leave Probability</th>
+                            <th>Risk Level</th>
+                            <th>Prediction Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if predictions %}
+                            {% for pred in predictions %}
+                                <tr>
+                                    <td><strong>{{ pred.employee_id }}</strong></td>
+                                    <td>{{ pred.employee.name if pred.employee else 'Deleted Employee' }}</td>
+                                    <td>
+                                        {% if pred.prediction == 'Likely to Leave' %}
+                                            <span class="text-danger fw-semibold"><i class="fa-solid fa-person-walking-arrow-right me-1"></i>Likely to Leave</span>
+                                        {% else %}
+                                            <span class="text-success fw-semibold"><i class="fa-solid fa-person-circle-check me-1"></i>Likely to Stay</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span>{{ pred.probability }}%</span>
+                                            <div class="progress flex-grow-1" style="height: 6px; min-width: 60px; background: rgba(255,255,255,0.05);">
+                                                {% set p_color = 'bg-success' %}
+                                                {% if pred.risk_level == 'High' %}
+                                                    {% set p_color = 'bg-danger' %}
+                                                {% elif pred.risk_level == 'Medium' %}
+                                                    {% set p_color = 'bg-warning' %}
+                                                {% endif %}
+                                                <div class="progress-bar {{ p_color }}" role="progressbar" style="width: {{ pred.probability }}%" aria-valuenow="{{ pred.probability }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if pred.risk_level == 'High' %}
+                                            <span class="badge-custom badge-risk-high">High</span>
+                                        {% elif pred.risk_level == 'Medium' %}
+                                            <span class="badge-custom badge-risk-medium">Medium</span>
+                                        {% else %}
+                                            <span class="badge-custom badge-risk-low">Low</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted" style="font-size: 0.85rem;">{{ pred.prediction_date.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ url_for('prediction_result', prediction_id=pred.prediction_id) }}" class="btn btn-sm btn-secondary-custom py-1.5 px-3">
+                                                <i class="fa-solid fa-eye me-1"></i>View Details
+                                            </a>
+                                            <form action="{{ url_for('prediction_delete', prediction_id=pred.prediction_id) }}" method="POST" onsubmit="return confirm('Erase this diagnostic log entry permanently?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1.5 px-2" style="border-radius: 8px;">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-clock-rotate-left mb-3" style="font-size: 2rem;"></i>
+                                    <p class="mb-0">No historical logs matched your query. Run predictions on active employee profiles first.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

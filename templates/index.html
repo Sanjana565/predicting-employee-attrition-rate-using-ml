@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}RETAIN.AI - Intelligent Employee Attrition Forecasting{% endblock %}
+
+{% block content %}
+<div class="row welcome-hero animate-fade-in-up">
+    <div class="col-12">
+        <h1 class="welcome-title text-glow-primary">Retain High-Value Talent</h1>
+        <p class="welcome-lead">
+            Harness machine learning predictions to identify employee attrition risk levels, evaluate key dissatisfaction factors, and obtain proactive retention recommendations.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('login') }}" class="btn btn-primary-custom px-4 py-3">
+                <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In Portal
+            </a>
+            <a href="{{ url_for('register') }}" class="btn btn-secondary-custom px-4 py-3">
+                <i class="fa-solid fa-user-plus me-2"></i>HR Manager SignUp
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2 mb-5 animate-fade-in-up" style="animation-delay: 0.15s;">
+    <div class="col-md-4">
+        <div class="glass-card h-100 p-4">
+            <div class="metric-icon bg-primary text-light mb-3">
+                <i class="fa-solid fa-keyboard"></i>
+            </div>
+            <h3 class="h5 mb-3 fw-bold">1. Input Details</h3>
+            <p class="text-secondary mb-0">
+                Log employee parameters including work experience, job details, monthly pay, overtime hours, job satisfaction, and travel distance from home.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card h-100 p-4">
+            <div class="metric-icon bg-info text-light mb-3">
+                <i class="fa-solid fa-diagram-project"></i>
+            </div>
+            <h3 class="h5 mb-3 fw-bold">2. Predictive Classification</h3>
+            <p class="text-secondary mb-0">
+                A Random Forest classifier analyzes demographics and satisfaction attributes to estimate attrition confidence scores instantly.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card h-100 p-4">
+            <div class="metric-icon bg-success text-light mb-3">
+                <i class="fa-solid fa-list-check"></i>
+            </div>
+            <h3 class="h5 mb-3 fw-bold">3. Retention Auditing</h3>
+            <p class="text-secondary mb-0">
+                Receive risk categorizations (Low, Medium, High) alongside dynamic recommendations targeting compensation adjustments, workload audits, or commute remedies.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

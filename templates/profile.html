@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row page-header animate-fade-in-up">
+    <div class="col-12">
+        <h1 class="page-title text-glow-primary">Account Profile</h1>
+        <p class="page-subtitle">Update your personal account credentials and security details.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5 animate-fade-in-up" style="animation-delay: 0.1s;">
+    <div class="col-md-6">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <div class="metric-icon bg-primary text-light mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; font-size: 1.6rem;">
+                    <i class="fa-solid fa-id-card"></i>
+                </div>
+                <h3 class="fw-bold">{{ current_user.name }}</h3>
+                <span class="badge-custom bg-dark border border-secondary text-muted text-uppercase" style="font-size: 0.7rem;">
+                    {{ current_user.role }} Account
+                </span>
+            </div>
+            
+            <hr class="border-secondary my-4">
+            
+            <form action="{{ url_for('profile') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label form-label-custom">Email Address (Read-Only)</label>
+                    <input type="email" class="form-control form-control-custom text-muted" value="{{ current_user.email }}" readonly disabled>
+                </div>
+                <div class="mb-3">
+                    <label for="name" class="form-label form-label-custom">Update Name *</label>
+                    <input type="text" class="form-control form-control-custom" id="name" name="name" required value="{{ current_user.name }}">
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label form-label-custom">Change Password (Leave blank to keep current)</label>
+                    <input type="password" class="form-control form-control-custom" id="password" name="password" placeholder="New Password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary-custom w-100 py-2.5">
+                    <i class="fa-solid fa-user-check me-2"></i>Update Profile Details
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

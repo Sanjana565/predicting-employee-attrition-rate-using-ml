@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Employee Attrition Prediction System. Use machine learning to forecast turnover risks and identify high-risk employees.">
+    <meta name="author" content="Antigravity HR Tech">
+    <title>{% block title %}Predictive HR Attrition Portal{% endblock %}</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom glassmorphism css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Glow backdrops -->
+    <div class="glow-spot-1"></div>
+    <div class="glow-spot-2"></div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fa-solid fa-brain-circuit me-2"></i>RETAIN.AI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if request.path == '/dashboard' or '/dashboard/' in request.path %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                                <i class="fa-solid fa-chart-line me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if '/employee' in request.path and 'history' not in request.path %}active{% endif %}" href="{{ url_for('employees_list') }}">
+                                <i class="fa-solid fa-users me-1"></i>Employees
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if 'history' in request.path %}active{% endif %}" href="{{ url_for('prediction_history') }}">
+                                <i class="fa-solid fa-clock-history me-1"></i>Inference Logs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if '/reports' in request.path %}active{% endif %}" href="{{ url_for('reports') }}">
+                                <i class="fa-solid fa-file-invoice-dollar me-1"></i>Reports
+                            </a>
+                        </li>
+                        {% if current_user.role == 'Admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom {% if '/admin/' in request.path %}active{% endif %}" href="{{ url_for('manage_users') }}">
+                                    <i class="fa-solid fa-user-gear me-1"></i>HR Users
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle nav-link-custom" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-circle-user me-2 text-primary"></i>{{ current_user.name }}
+                                <span class="badge rounded-pill bg-dark border border-secondary ms-1 text-uppercase" style="font-size: 0.65rem;">
+                                    {{ current_user.role }}
+                                </span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end bg-dark border border-secondary shadow-lg">
+                                <li>
+                                    <a class="dropdown-item text-light py-2" href="{{ url_for('profile') }}">
+                                        <i class="fa-solid fa-id-card me-2 text-muted"></i>Account Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider border-secondary"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger py-2" href="{{ url_for('logout') }}">
+                                        <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Sign Out
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if request.path == '/login' %}active{% endif %}" href="{{ url_for('login') }}">
+                                <i class="fa-solid fa-right-to-bracket me-1"></i>Sign In
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if request.path == '/register' %}active{% endif %}" href="{{ url_for('register') }}">
+                                <i class="fa-solid fa-user-plus me-1"></i>Register HR
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mb-5">
+        <!-- Flash messages system -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="row">
+                    <div class="col-12">
+                        {% for category, message in messages %}
+                            {% set alert_type = 'info' %}
+                            {% set alert_icon = 'fa-circle-info' %}
+                            {% if category == 'success' %}
+                                {% set alert_type = 'success' %}
+                                {% set alert_icon = 'fa-circle-check' %}
+                            {% elif category == 'danger' %}
+                                {% set alert_type = 'danger' %}
+                                {% set alert_icon = 'fa-triangle-exclamation' %}
+                            {% elif category == 'warning' %}
+                                {% set alert_type = 'warning' %}
+                                {% set alert_icon = 'fa-circle-exclamation' %}
+                            {% endif %}
+                            <div class="alert-custom alert-custom-{{ alert_type }} alert-dismissible fade show" role="alert">
+                                <i class="fa-solid {{ alert_icon }} alert-custom-icon text-{{ alert_type }}"></i>
+                                <div>{{ message }}</div>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="margin-left: auto;"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Content Injection -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-4 border-top border-secondary text-center text-muted" style="background: rgba(8,12,20,0.5);">
+        <div class="container">
+            <p class="mb-1" style="font-size: 0.85rem;">&copy; 2026 RETAIN.AI Employee Turnover Prediction Portal.</p>
+            <p class="mb-0 text-muted" style="font-size: 0.75rem;">Powered by Random Forest Classifier & Flask Backend. Version 1.0.0</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
