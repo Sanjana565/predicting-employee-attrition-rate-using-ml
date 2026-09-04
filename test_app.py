@@ -114,6 +114,11 @@ class AttritionSystemTestCase(unittest.TestCase):
         self.assertEqual(login_response.status_code, 200)
         self.assertIn(b'New HR Officer', login_response.data)
         
+        # Test Sign Out (Logout)
+        logout_response = self.client.get('/logout', follow_redirects=True)
+        self.assertEqual(logout_response.status_code, 200)
+        self.assertIn(b'Successfully logged out', logout_response.data)
+        
     def test_employee_crud_endpoints(self):
         """
         Test adding, editing, and deleting employee records under authenticated sessions.

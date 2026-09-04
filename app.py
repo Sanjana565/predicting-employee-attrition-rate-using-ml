@@ -3,7 +3,7 @@ import random
 import numpy as np
 from functools import wraps
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from database import db, init_database, User, Employee, Prediction
 from ml_model import predict_attrition
@@ -133,11 +133,11 @@ def register():
     return render_template('register.html')
 
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
+    session.clear()
     flash('Successfully logged out.', 'info')
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 @app.route('/dashboard')
 @login_required

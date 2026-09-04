@@ -39,10 +39,13 @@
                     <input type="password" class="form-control form-control-custom" id="password" name="password" placeholder="New Password">
                 </div>
                 
-                <button type="submit" class="btn btn-primary-custom w-100 py-2.5">
+                <button type="submit" class="btn btn-primary-custom w-100 py-2.5 mb-3">
                     <i class="fa-solid fa-user-check me-2"></i>Update Profile Details
                 </button>
             </form>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 py-2">
+                <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Sign Out
+            </a>
         </div>
     </div>
 </div>
