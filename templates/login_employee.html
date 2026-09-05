@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee Portal Sign In - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-5 animate-fade-in-up">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <div class="badge rounded-pill bg-info bg-opacity-25 text-info mb-3 px-3 py-2 border border-info border-opacity-25">
+                    <i class="fa-solid fa-id-badge me-1"></i> Employee Self-Service
+                </div>
+                <h2 class="fw-bold">Employee Sign In</h2>
+                <p class="text-secondary">Access your personal profile, satisfaction metrics & engagement records</p>
+            </div>
+            
+            <form action="{{ url_for('login_employee') }}" method="POST">
+                <div class="mb-3">
+                    <label for="identifier" class="form-label form-label-custom">Employee Email or Employee ID</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" class="form-control form-control-custom" id="identifier" name="identifier" required placeholder="employee@company.com or EMP1001">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label form-label-custom">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" class="form-control form-control-custom" id="password" name="password" required placeholder="••••••••">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-info w-100 py-2.5 mb-3 text-dark fw-bold" style="background: linear-gradient(135deg, #0ea5e9, #38bdf8); border: none;">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In to Employee Portal
+                </button>
+            </form>
+            
+            <div class="text-center mt-3">
+                <a href="{{ url_for('login_hr') }}" class="text-secondary text-decoration-none" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-user-shield me-1"></i>Are you an HR Manager or Admin? Switch to HR Sign In
+                </a>
+            </div>
+            
+            <div class="mt-4 p-3 glass-panel rounded">
+                <h6 class="fw-bold text-muted mb-2 text-center" style="font-size: 0.8rem;">Employee Demo Credentials</h6>
+                <div class="text-secondary d-flex justify-content-between mb-1" style="font-size: 0.75rem;">
+                    <span><strong>Email:</strong> employee@attrition.com</span>
+                    <span>Password: <strong>emp12345</strong></span>
+                </div>
+                <div class="text-secondary d-flex justify-content-between" style="font-size: 0.75rem;">
+                    <span><strong>Employee ID:</strong> EMP1001</span>
+                    <span>Password: <strong>emp12345</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

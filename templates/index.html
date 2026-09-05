@@ -9,9 +9,12 @@
         <p class="welcome-lead">
             Harness machine learning predictions to identify employee attrition risk levels, evaluate key dissatisfaction factors, and obtain proactive retention recommendations.
         </p>
-        <div class="d-flex justify-content-center gap-3">
-            <a href="{{ url_for('login') }}" class="btn btn-primary-custom px-4 py-3">
-                <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In Portal
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{{ url_for('login_hr') }}" class="btn btn-primary-custom px-4 py-3">
+                <i class="fa-solid fa-user-shield me-2"></i>HR & Admin Sign In
+            </a>
+            <a href="{{ url_for('login_employee') }}" class="btn btn-info px-4 py-3 text-dark fw-bold" style="background: linear-gradient(135deg, #0ea5e9, #38bdf8); border: none;">
+                <i class="fa-solid fa-id-badge me-2"></i>Employee Sign In
             </a>
             <a href="{{ url_for('register') }}" class="btn btn-secondary-custom px-4 py-3">
                 <i class="fa-solid fa-user-plus me-2"></i>HR Manager SignUp

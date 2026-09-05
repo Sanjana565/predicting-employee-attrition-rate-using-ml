@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}HR & Admin Portal Sign In - RETAIN.AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-5 animate-fade-in-up">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <div class="badge rounded-pill bg-primary bg-opacity-25 text-primary mb-3 px-3 py-2 border border-primary border-opacity-25">
+                    <i class="fa-solid fa-user-shield me-1"></i> HR & Admin Portal
+                </div>
+                <h2 class="fw-bold">HR Sign In</h2>
+                <p class="text-secondary">Access workforce predictive analytics & employee management</p>
+            </div>
+            
+            <form action="{{ url_for('login_hr') }}" method="POST">
+                <div class="mb-3">
+                    <label for="email" class="form-label form-label-custom">HR Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-envelope"></i></span>
+                        <input type="email" class="form-control form-control-custom" id="email" name="email" required placeholder="hr@company.com">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label form-label-custom">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" class="form-control form-control-custom" id="password" name="password" required placeholder="••••••••">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary-custom w-100 py-2.5 mb-3">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In as HR Manager
+                </button>
+            </form>
+            
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <a href="{{ url_for('login_employee') }}" class="text-secondary text-decoration-none" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-id-card me-1"></i>Employee Portal Sign In
+                </a>
+                <a href="{{ url_for('register') }}" class="text-primary text-decoration-none" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-user-plus me-1"></i>Register HR Account
+                </a>
+            </div>
+            
+            <div class="mt-4 p-3 glass-panel rounded">
+                <h6 class="fw-bold text-muted mb-2 text-center" style="font-size: 0.8rem;">HR Demo Credentials</h6>
+                <div class="text-secondary d-flex justify-content-between mb-1" style="font-size: 0.75rem;">
+                    <span><strong>HR Manager:</strong> hr@attrition.com</span>
+                    <span>Password: <strong>hr12345</strong></span>
+                </div>
+                <div class="text-secondary d-flex justify-content-between" style="font-size: 0.75rem;">
+                    <span><strong>Administrator:</strong> admin@attrition.com</span>
+                    <span>Password: <strong>admin123</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -106,8 +106,8 @@ class AttritionSystemTestCase(unittest.TestCase):
         self.assertEqual(reg_response.status_code, 200)
         self.assertIn(b'Registration successful', reg_response.data)
         
-        # Attempt to log in with new credentials
-        login_response = self.client.post('/login', data={
+        # Attempt to log in via HR login endpoint
+        login_response = self.client.post('/login/hr', data={
             'email': 'newhr@company.com',
             'password': 'newpassword123'
         }, follow_redirects=True)
@@ -118,6 +118,38 @@ class AttritionSystemTestCase(unittest.TestCase):
         logout_response = self.client.get('/logout', follow_redirects=True)
         self.assertEqual(logout_response.status_code, 200)
         self.assertIn(b'Successfully logged out', logout_response.data)
+
+    def test_employee_login_and_portal(self):
+        """
+        Test Employee login via /login/employee and access to Employee Self-Service portal.
+        """
+        with app.app_context():
+            # Create Employee user
+            emp_user = User(name="Sample Staff", email="staff@company.com", role="Employee", employee_id="EMP999")
+            emp_user.set_password("staff123")
+            db.session.add(emp_user)
+
+            emp_rec = Employee(
+                employee_id="EMP999", name="Sample Staff", age=30, gender="Female",
+                department="Marketing", job_role="Manager", salary=90000, monthly_income=7500,
+                years_at_company=5, education="Master's Degree", marital_status="Single",
+                work_life_balance=3, job_satisfaction=4, performance_rating=3, overtime="No", distance_from_home=5.0
+            )
+            db.session.add(emp_rec)
+            db.session.commit()
+
+        # Login via /login/employee using Employee ID
+        login_resp = self.client.post('/login/employee', data={
+            'identifier': 'EMP999',
+            'password': 'staff123'
+        }, follow_redirects=True)
+        self.assertEqual(login_resp.status_code, 200)
+        self.assertIn(b'Sample Staff', login_resp.data)
+        self.assertIn(b'EMPLOYEE SELF-SERVICE', login_resp.data)
+
+        # Ensure Employee cannot access HR-only list
+        hr_only_resp = self.client.get('/employees', follow_redirects=True)
+        self.assertIn(b'HR Manager privileges required', hr_only_resp.data)
         
     def test_employee_crud_endpoints(self):
         """

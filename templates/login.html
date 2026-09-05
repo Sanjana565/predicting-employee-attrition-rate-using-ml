@@ -1,46 +1,67 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign In - RETAIN.AI{% endblock %}
+{% block title %}Sign In Portal - RETAIN.AI{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-md-5 animate-fade-in-up">
-        <div class="glass-card p-5">
-            <div class="text-center mb-4">
-                <i class="fa-solid fa-brain-circuit text-primary mb-3 text-glow-primary" style="font-size: 2.5rem;"></i>
-                <h2 class="fw-bold">Sign In</h2>
-                <p class="text-secondary">Access predictive attrition dashboards</p>
+<div class="row justify-content-center align-items-center mb-5" style="min-height: 65vh;">
+    <div class="col-12 text-center mb-4 animate-fade-in-up">
+        <h2 class="fw-bold display-6 text-glow-primary">Welcome to RETAIN.AI Portal</h2>
+        <p class="text-secondary">Please select your portal sign-in destination</p>
+    </div>
+
+    <!-- HR & Admin Login Card -->
+    <div class="col-md-5 mb-4 animate-fade-in-up">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between border-start border-4 border-primary">
+            <div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="metric-icon bg-primary bg-opacity-25 text-primary me-3" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">HR & Admin Portal</h4>
+                        <span class="text-secondary" style="font-size: 0.85rem;">Management & Predictive Analytics</span>
+                    </div>
+                </div>
+                <p class="text-muted" style="font-size: 0.9rem;">
+                    Log in as HR Manager or Administrator to evaluate employee attrition risks, trigger Random Forest ML inferences, and audit workforce retention reports.
+                </p>
             </div>
             
-            <form action="{{ url_for('login') }}" method="POST">
-                <div class="mb-3">
-                    <label for="email" class="form-label form-label-custom">Email Address</label>
-                    <input type="email" class="form-control form-control-custom" id="email" name="email" required placeholder="name@company.com">
+            <div class="mt-4">
+                <a href="{{ url_for('login_hr') }}" class="btn btn-primary-custom w-100 py-2.5 mb-2">
+                    <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In as HR / Admin
+                </a>
+                <div class="text-center">
+                    <small class="text-muted">Demo: hr@attrition.com / hr12345</small>
                 </div>
-                <div class="mb-4">
-                    <label for="password" class="form-label form-label-custom">Password</label>
-                    <input type="password" class="form-control form-control-custom" id="password" name="password" required placeholder="••••••••">
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Login Card -->
+    <div class="col-md-5 mb-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between border-start border-4 border-info">
+            <div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="metric-icon bg-info bg-opacity-25 text-info me-3" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fa-solid fa-id-badge"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">Employee Portal</h4>
+                        <span class="text-secondary" style="font-size: 0.85rem;">Self-Service & Engagement</span>
+                    </div>
                 </div>
-                
-                <button type="submit" class="btn btn-primary-custom w-100 py-2.5 mb-3">
-                    <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In
-                </button>
-            </form>
-            
-            <div class="text-center mt-3">
-                <span class="text-muted">New HR Manager?</span>
-                <a href="{{ url_for('register') }}" class="text-primary text-decoration-none ms-1">Create an account</a>
+                <p class="text-muted" style="font-size: 0.9rem;">
+                    Log in as an Employee to review your personal employment details, work-life balance scores, job satisfaction rating, and engagement records.
+                </p>
             </div>
             
-            <div class="mt-4 p-3 glass-panel rounded">
-                <h6 class="fw-bold text-muted mb-1 text-center" style="font-size: 0.8rem;">Demo Accounts</h6>
-                <div class="text-secondary d-flex justify-content-between mb-1" style="font-size: 0.75rem;">
-                    <span><strong>HR:</strong> hr@attrition.com</span>
-                    <span>password: <strong>hr12345</strong></span>
-                </div>
-                <div class="text-secondary d-flex justify-content-between" style="font-size: 0.75rem;">
-                    <span><strong>Admin:</strong> admin@attrition.com</span>
-                    <span>password: <strong>admin123</strong></span>
+            <div class="mt-4">
+                <a href="{{ url_for('login_employee') }}" class="btn btn-info w-100 py-2.5 mb-2 text-dark fw-bold" style="background: linear-gradient(135deg, #0ea5e9, #38bdf8); border: none;">
+                    <i class="fa-solid fa-id-card me-2"></i>Sign In as Employee
+                </a>
+                <div class="text-center">
+                    <small class="text-muted">Demo: employee@attrition.com / emp12345</small>
                 </div>
             </div>
         </div>

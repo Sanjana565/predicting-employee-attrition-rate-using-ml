@@ -21,8 +21,9 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
+# Decorator for Admin access
 # Decorator for Admin access
 def admin_required(f):
     @wraps(f)
@@ -37,15 +38,27 @@ def admin_required(f):
 def hr_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'HR':
+        if not current_user.is_authenticated or current_user.role not in ['HR', 'Admin']:
             flash('Access denied. HR Manager privileges required.', 'danger')
             return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
     return decorated_function
 
-# Initialize Database tables and Seed Admin user if database is empty
+# Initialize Database tables and Seed Admin, HR, and Employee users
 with app.app_context():
     db.create_all()
+    
+    # Check if 'employee_id' column exists in 'users' table, if not add it dynamically for SQLite schema migration
+    try:
+        from sqlalchemy import inspect, text
+        inspector = inspect(db.engine)
+        columns = [c['name'] for c in inspector.get_columns('users')]
+        if 'employee_id' not in columns:
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN employee_id VARCHAR(50)"))
+                conn.commit()
+    except Exception as e:
+        print("Migration check info:", e)
     
     # Check if Admin already exists, if not seed it
     admin = User.query.filter_by(email='admin@attrition.com').first()
@@ -68,6 +81,42 @@ with app.app_context():
         )
         default_hr.set_password('hr12345')
         db.session.add(default_hr)
+
+    # Check if demo employee record exists, if not seed it
+    emp_rec = Employee.query.filter_by(employee_id='EMP1001').first()
+    if not emp_rec:
+        emp_rec = Employee(
+            employee_id='EMP1001',
+            name='John Doe',
+            age=32,
+            gender='Male',
+            department='Technology',
+            job_role='Software Engineer',
+            salary=85000.0,
+            monthly_income=7083.0,
+            years_at_company=3,
+            education="Bachelor's Degree",
+            marital_status='Single',
+            work_life_balance=3,
+            job_satisfaction=3,
+            performance_rating=4,
+            overtime='No',
+            distance_from_home=8.5
+        )
+        db.session.add(emp_rec)
+        db.session.flush()
+
+    # Check if demo employee user exists, if not seed it
+    emp_user = User.query.filter_by(email='employee@attrition.com').first()
+    if not emp_user:
+        default_emp_user = User(
+            name='John Doe',
+            email='employee@attrition.com',
+            role='Employee',
+            employee_id='EMP1001'
+        )
+        default_emp_user.set_password('emp12345')
+        db.session.add(default_emp_user)
         
     db.session.commit()
 
@@ -98,6 +147,51 @@ def login():
             
     return render_template('login.html')
 
+@app.route('/login/hr', methods=['GET', 'POST'])
+def login_hr():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            if user.role not in ['HR', 'Admin']:
+                flash('Notice: Logged in as Employee. Redirecting to your Employee Portal.', 'info')
+            else:
+                flash(f'Welcome HR Manager, {user.name}!', 'success')
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid HR email or password credentials.', 'danger')
+            
+    return render_template('login_hr.html')
+
+@app.route('/login/employee', methods=['GET', 'POST'])
+def login_employee():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+        
+    if request.method == 'POST':
+        identifier = request.form.get('identifier', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        # Identifier can be email or employee_id
+        user = User.query.filter(
+            (User.email == identifier) | (User.employee_id == identifier)
+        ).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            flash(f'Welcome to your Employee Self-Service Portal, {user.name}!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid Employee ID / Email or password.', 'danger')
+            
+    return render_template('login_employee.html')
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -107,44 +201,104 @@ def register():
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '').strip()
-        role = 'HR' # Default role for self-registration is HR Manager
+        role = request.form.get('role', 'HR').strip()
+        emp_id = request.form.get('employee_id', '').strip()
         
         if not name or not email or not password:
-            flash('Please fill in all fields.', 'warning')
+            flash('Please fill in all required fields.', 'warning')
             return render_template('register.html')
             
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Email already registered. Please log in.', 'warning')
-            return redirect(url_for('login'))
+            redirect_target = 'login_employee' if existing_user.role == 'Employee' else 'login_hr'
+            return redirect(url_for(redirect_target))
             
-        new_user = User(name=name, email=email, role=role)
+        # Ensure role is valid
+        if role not in ['HR', 'Employee']:
+            role = 'HR'
+            
+        # Link or auto-create Employee record if registering as Employee
+        linked_emp_id = emp_id if emp_id else None
+        if role == 'Employee':
+            if not linked_emp_id:
+                # Generate a default employee ID if not provided
+                linked_emp_id = f"EMP{random.randint(2000, 9999)}"
+                
+            emp_record = Employee.query.filter_by(employee_id=linked_emp_id).first()
+            if not emp_record:
+                # Create default employee profile for self-registered employee
+                emp_record = Employee(
+                    employee_id=linked_emp_id,
+                    name=name,
+                    age=30,
+                    gender='Other',
+                    department='General',
+                    job_role='Staff Member',
+                    salary=60000.0,
+                    monthly_income=5000.0,
+                    years_at_company=1,
+                    education="Bachelor's Degree",
+                    marital_status='Single',
+                    work_life_balance=3,
+                    job_satisfaction=3,
+                    performance_rating=3,
+                    overtime='No',
+                    distance_from_home=5.0
+                )
+                db.session.add(emp_record)
+                db.session.flush()
+
+        new_user = User(name=name, email=email, role=role, employee_id=linked_emp_id)
         new_user.set_password(password)
         
         try:
             db.session.add(new_user)
             db.session.commit()
-            flash('Registration successful! You can now log in.', 'success')
-            return redirect(url_for('login'))
+            if role == 'Employee':
+                flash(f'Registration successful! Your Employee ID is {linked_emp_id}. You can now log in.', 'success')
+                return redirect(url_for('login_employee'))
+            else:
+                flash('Registration successful! You can now log in.', 'success')
+                return redirect(url_for('login_hr'))
         except Exception as e:
             db.session.rollback()
-            flash('An error occurred. Please try again.', 'danger')
+            flash(f'An error occurred during registration: {str(e)}', 'danger')
             
     return render_template('register.html')
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
     logout_user()
     session.clear()
     flash('Successfully logged out.', 'info')
-    return redirect(url_for('login'))
+    return redirect(url_for('index'))
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
     if current_user.role == 'Admin':
         return redirect(url_for('dashboard_admin'))
+    elif current_user.role == 'Employee':
+        return redirect(url_for('dashboard_employee'))
     return redirect(url_for('dashboard_hr'))
+
+@app.route('/dashboard/employee')
+@login_required
+def dashboard_employee():
+    emp_record = None
+    if current_user.employee_id:
+        emp_record = db.session.get(Employee, current_user.employee_id)
+    if not emp_record:
+        emp_record = Employee.query.filter_by(name=current_user.name).first()
+    if not emp_record:
+        emp_record = Employee.query.first()
+        
+    latest_prediction = None
+    if emp_record:
+        latest_prediction = Prediction.query.filter_by(employee_id=emp_record.employee_id).order_by(Prediction.prediction_date.desc()).first()
+        
+    return render_template('dashboard_employee.html', employee=emp_record, prediction=latest_prediction)
 
 @app.route('/dashboard/hr')
 @login_required
@@ -252,6 +406,7 @@ def profile():
 
 @app.route('/employees')
 @login_required
+@hr_required
 def employees_list():
     query = Employee.query
     
@@ -297,6 +452,7 @@ def employees_list():
 
 @app.route('/employee/add', methods=['GET', 'POST'])
 @login_required
+@hr_required
 def employee_add():
     if request.method == 'POST':
         # Retrieve form data
@@ -367,6 +523,7 @@ def employee_add():
 
 @app.route('/employee/edit/<employee_id>', methods=['GET', 'POST'])
 @login_required
+@hr_required
 def employee_edit(employee_id):
     emp = Employee.query.get_or_404(employee_id)
     
@@ -425,6 +582,7 @@ def employee_edit(employee_id):
 
 @app.route('/employee/delete/<employee_id>', methods=['POST'])
 @login_required
+@hr_required
 def employee_delete(employee_id):
     emp = Employee.query.get_or_404(employee_id)
     name = emp.name
@@ -442,6 +600,7 @@ def employee_delete(employee_id):
 
 @app.route('/predict/trigger/<employee_id>')
 @login_required
+@hr_required
 def predict_attrition_trigger(employee_id):
     emp = Employee.query.get_or_404(employee_id)
     
@@ -487,6 +646,7 @@ def prediction_result(prediction_id):
 
 @app.route('/prediction/history')
 @login_required
+@hr_required
 def prediction_history():
     query = Prediction.query.join(Employee)
     
@@ -513,6 +673,7 @@ def prediction_history():
 
 @app.route('/prediction/delete/<int:prediction_id>', methods=['POST'])
 @login_required
+@hr_required
 def prediction_delete(prediction_id):
     pred = Prediction.query.get_or_404(prediction_id)
     try:
@@ -530,6 +691,7 @@ def prediction_delete(prediction_id):
 
 @app.route('/reports')
 @login_required
+@hr_required
 def reports():
     total_emp = Employee.query.count()
     
@@ -756,5 +918,5 @@ def api_analytics_charts():
     })
 
 if __name__ == '__main__':
-    # Run server locally on port 5000
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    # Run server locally on port 5050
+    app.run(debug=True, host='127.0.0.1', port=5050)

@@ -8,7 +8,7 @@ db = SQLAlchemy()
 
 class User(db.Model, UserMixin):
     """
-    User model for HR Managers and Admins.
+    User model for HR Managers, Admins, and Employees.
     """
     __tablename__ = 'users'
     
@@ -16,7 +16,11 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='HR') # 'HR' or 'Admin'
+    role = db.Column(db.String(20), nullable=False, default='HR') # 'HR', 'Admin', or 'Employee'
+    employee_id = db.Column(db.String(50), db.ForeignKey('employees.employee_id', ondelete='SET NULL'), nullable=True)
+    
+    # Relationship to Employee
+    employee_profile = db.relationship('Employee', backref='user_account', uselist=False)
     
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -29,7 +33,8 @@ class User(db.Model, UserMixin):
             'id': self.id,
             'name': self.name,
             'email': self.email,
-            'role': self.role
+            'role': self.role,
+            'employee_id': self.employee_id
         }
 
 class Employee(db.Model):

@@ -1,41 +1,70 @@
 {% extends 'base.html' %}
 
-{% block title %}HR Registration - RETAIN.AI{% endblock %}
+{% block title %}Account Registration - RETAIN.AI{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center align-items-center" style="min-height: 70vh;">
-    <div class="col-md-5 animate-fade-in-up">
+    <div class="col-md-6 animate-fade-in-up">
         <div class="glass-card p-5">
             <div class="text-center mb-4">
                 <i class="fa-solid fa-user-plus text-primary mb-3 text-glow-primary" style="font-size: 2.5rem;"></i>
-                <h2 class="fw-bold">HR SignUp</h2>
-                <p class="text-secondary">Register a new HR Manager account</p>
+                <h2 class="fw-bold">Create Account</h2>
+                <p class="text-secondary">Register a new HR Manager or Employee Self-Service Account</p>
             </div>
             
             <form action="{{ url_for('register') }}" method="POST">
                 <div class="mb-3">
-                    <label for="name" class="form-label form-label-custom">Full Name</label>
-                    <input type="text" class="form-control form-control-custom" id="name" name="name" required placeholder="Jane Doe">
+                    <label for="role" class="form-label form-label-custom">Select Account Type</label>
+                    <select class="form-control form-control-custom fw-semibold" id="role" name="role" onchange="toggleEmpFields(this.value)">
+                        <option value="HR" selected>HR Manager Account</option>
+                        <option value="Employee">Employee Account</option>
+                    </select>
                 </div>
+                
+                <div class="mb-3">
+                    <label for="name" class="form-label form-label-custom">Full Name</label>
+                    <input type="text" class="form-control form-control-custom" id="name" name="name" required placeholder="John Doe">
+                </div>
+                
                 <div class="mb-3">
                     <label for="email" class="form-label form-label-custom">Email Address</label>
-                    <input type="email" class="form-control form-control-custom" id="email" name="email" required placeholder="jane.doe@company.com">
+                    <input type="email" class="form-control form-control-custom" id="email" name="email" required placeholder="john.doe@company.com">
                 </div>
+                
+                <div class="mb-3" id="emp_id_container" style="display: none;">
+                    <label for="employee_id" class="form-label form-label-custom">Employee ID (Optional)</label>
+                    <input type="text" class="form-control form-control-custom" id="employee_id" name="employee_id" placeholder="e.g. EMP1001 (Leave blank to auto-assign)">
+                    <small class="text-muted" style="font-size: 0.75rem;">If your HR team has already assigned an Employee ID, enter it here to link your record.</small>
+                </div>
+
                 <div class="mb-4">
                     <label for="password" class="form-label form-label-custom">Password</label>
                     <input type="password" class="form-control form-control-custom" id="password" name="password" required placeholder="Minimum 6 characters">
                 </div>
                 
                 <button type="submit" class="btn btn-primary-custom w-100 py-2.5 mb-3">
-                    <i class="fa-solid fa-user-check me-2"></i>Create Account
+                    <i class="fa-solid fa-user-check me-2"></i>Register Account
                 </button>
             </form>
             
             <div class="text-center mt-3">
                 <span class="text-muted">Already have an account?</span>
-                <a href="{{ url_for('login') }}" class="text-primary text-decoration-none ms-1">Sign In instead</a>
+                <a href="{{ url_for('login') }}" class="text-primary text-decoration-none ms-1">Sign In Portal</a>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleEmpFields(role) {
+    const container = document.getElementById('emp_id_container');
+    if (role === 'Employee') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}
